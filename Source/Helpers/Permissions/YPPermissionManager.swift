@@ -13,7 +13,14 @@ internal struct YPPermissionManager {
 
     static func checkLibraryPermissionAndAskIfNeeded(sourceVC: UIViewController,
                                                      completion: @escaping YPPermissionManagerCompletion) {
-        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        var status: PHAuthorizationStatus
+
+        if #available(iOS 14, *) {
+            status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        } else {
+            status = PHPhotoLibrary.authorizationStatus()
+        }
+
         switch status {
         case .authorized:
             completion(true)
@@ -26,9 +33,17 @@ internal struct YPPermissionManager {
             sourceVC.present(alert, animated: true, completion: nil)
         case .notDetermined:
             // Show permission popup and get new status
-            PHPhotoLibrary.requestAuthorization(for: .readWrite) { s in
-                DispatchQueue.main.async {
-                    completion(s == .authorized || s == .limited)
+            if #available(iOS 14, *) {
+                PHPhotoLibrary.requestAuthorization(for: .readWrite) { s in
+                    DispatchQueue.main.async {
+                        completion(s == .authorized || s == .limited)
+                    }
+                }
+            } else {
+                PHPhotoLibrary.requestAuthorization { s in
+                    DispatchQueue.main.async {
+                        completion(s == .authorized)
+                    }
                 }
             }
         @unknown default:

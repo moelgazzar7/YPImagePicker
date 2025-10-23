@@ -164,7 +164,9 @@ internal final class YPLibraryVC: UIViewController, YPPermissionCheckable {
     func multipleSelectionButtonTapped() {
         // If no items, than preventing multiple selection
         guard mediaManager.hasResultItems else {
-            PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: self)
+            if #available(iOS 14, *) {
+                PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: self)
+            }
             return
         }
 
